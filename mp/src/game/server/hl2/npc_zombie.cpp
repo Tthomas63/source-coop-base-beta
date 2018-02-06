@@ -115,6 +115,8 @@ public:
 	void StartTask( const Task_t *pTask );
 	void RunTask( const Task_t *pTask );
 
+	float		MaxYawSpeed(void);
+
 	virtual const char *GetLegsModel( void );
 	virtual const char *GetTorsoModel( void );
 	virtual const char *GetHeadcrabClassname( void );
@@ -799,6 +801,33 @@ void CZombie::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, bool b
 				ENVELOPE_CONTROLLER.SoundChangeVolume( m_pMoanSound, 1, 1.0 );
 			}
 		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+float CZombie::MaxYawSpeed(void)
+{
+	switch (GetActivity())
+	{
+	case ACT_TURN_LEFT:
+	case ACT_TURN_RIGHT:
+		return 200;
+		break;
+
+	case ACT_RUN:
+		return 200;
+		break;
+
+	case ACT_WALK:
+	case ACT_IDLE:
+		return 200;
+		break;
+
+	default:
+		return 200;
+		break;
 	}
 }
 

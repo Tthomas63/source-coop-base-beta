@@ -32,9 +32,11 @@ public:
 	float			MaxYawSpeed ( void );
 	void			WarmUpSound ( void );
 	void			AlertSound( void );
-	void			DeathSound( const CTakeDamageInfo &info );
+	//void			DeathSound( const CTakeDamageInfo &info );
+	void			DeathSound(void);
 	void			WarnSound( void );
-	void			PainSound( const CTakeDamageInfo &info );
+	//void			PainSound( const CTakeDamageInfo &info );
+	void			PainSound(void);
 	void			IdleSound( void );
 	void			StartTask( const Task_t *pTask );
 	void			RunTask( const Task_t *pTask );
@@ -59,6 +61,8 @@ public:
 
 	CEnergyWave*	m_pEnergyWave;
 	float			m_flEndEnergyWaveTime;
+
+	int				m_iSpriteTexture;
 
 	bool			m_fAsleep;// some houndeyes sleep in idle mode if this is set, the houndeye is lying down
 	bool			m_fDontBlink;// don't try to open/close eye if this bit is set!

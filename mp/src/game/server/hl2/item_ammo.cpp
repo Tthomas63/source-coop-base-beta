@@ -553,7 +553,7 @@ public:
 LINK_ENTITY_TO_CLASS(item_box_buckshot, CItem_BoxBuckshot);
 
 // ========================================================================
-//	>> Uranium AKA Gauss/Egon
+//	>> Uranium AKA Gauss/Egon Ammo
 // ========================================================================
 class CItem_BoxUranium : public CItem
 {

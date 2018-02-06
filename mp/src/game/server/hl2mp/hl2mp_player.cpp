@@ -219,6 +219,7 @@ void CHL2MP_Player::GiveAllItems( void )
 	
 	GiveNamedItem( "weapon_crossbow" );
 	GiveNamedItem( "weapon_egon" );
+	GiveNamedItem( "weapon_gauss" );
 	
 	GiveNamedItem( "weapon_rpg" );
 
@@ -369,7 +370,10 @@ void CHL2MP_Player::Spawn(void)
 	SetPlayerUnderwater(false);
 
 	// Move them to Progress Point
-	SetAbsOrigin(m_vProgressPoint);
+	if (m_vProgressPoint != Vector(0, 0, 0))
+	{
+		SetAbsOrigin(m_vProgressPoint);
+	}
 
 	m_bReady = false;
 }
@@ -861,8 +865,11 @@ void CHL2MP_Player::SetAnimation( PLAYER_ANIM playerAnim )
 		}
 	
 		// Already using the desired animation?
-		if ( GetSequence() == animDesired )
+		if (GetSequence() == animDesired)
+		{
+			Msg("Already using desired sequence SPOT 1\n");
 			return;
+		}
 
 		m_flPlaybackRate = 1.0;
 		ResetSequence( animDesired );
@@ -871,10 +878,13 @@ void CHL2MP_Player::SetAnimation( PLAYER_ANIM playerAnim )
 	}
 
 	// Already using the desired animation?
-	if ( GetSequence() == animDesired )
+	if (GetSequence() == animDesired)
+	{
+		Msg("Already using desired sequence SPOT 2\n");
 		return;
+	}
 
-	//Msg( "Set animation to %d\n", animDesired );
+	Msg( "Set animation to %d\n", animDesired );
 	// Reset to first frame of desired animation
 	ResetSequence( animDesired );
 	SetCycle( 0 );

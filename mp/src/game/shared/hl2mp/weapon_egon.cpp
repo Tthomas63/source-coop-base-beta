@@ -110,20 +110,21 @@ private:
 	float				m_flStartFireTime;
 	float				m_flDmgTime;
 	CHandle<CSprite>	m_hSprite;
+	CHandle<CSprite>	m_barrelSprite;
 	CHandle<CBeam>		m_hBeam;
 	CHandle<CBeam>		m_hNoise;
 };
 
 acttable_t	CWeaponEgon::m_acttable[] =
 {
-	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_SMG1, false },
-	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_SMG1, false },
-	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_SMG1, false },
-	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_SMG1, false },
-	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1, false },
-	{ ACT_HL2MP_GESTURE_RELOAD, ACT_HL2MP_GESTURE_RELOAD_SMG1, false },
-	{ ACT_HL2MP_JUMP, ACT_HL2MP_JUMP_SMG1, false },
-	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_SMG1, false },
+	{ ACT_HL2MP_IDLE, ACT_HL2MP_IDLE_AR2, false },
+	{ ACT_HL2MP_RUN, ACT_HL2MP_RUN_AR2, false },
+	{ ACT_HL2MP_IDLE_CROUCH, ACT_HL2MP_IDLE_CROUCH_AR2, false },
+	{ ACT_HL2MP_WALK_CROUCH, ACT_HL2MP_WALK_CROUCH_AR2, false },
+	{ ACT_HL2MP_GESTURE_RANGE_ATTACK, ACT_HL2MP_GESTURE_RANGE_ATTACK_AR2, false },
+	{ ACT_HL2MP_GESTURE_RELOAD, ACT_HL2MP_GESTURE_RELOAD_AR2, false },
+	{ ACT_HL2MP_JUMP, ACT_HL2MP_JUMP_AR2, false },
+	{ ACT_RANGE_ATTACK1, ACT_RANGE_ATTACK_AR2, false },
 };
 
 IMPLEMENT_ACTTABLE(CWeaponEgon);
@@ -289,7 +290,7 @@ void CWeaponEgon::PrimaryAttack(void)
 		Msg("Fire startup?\n");
 		Fire(vecSrc, vecAiming);
 
-		if (gpGlobals->curtime >= (m_flStartFireTime + 0.5))
+		if (gpGlobals->curtime >= (m_flStartFireTime + 0.1))
 		{
 			EmitSound("Weapon_Gluon.Run");
 
@@ -357,6 +358,19 @@ void CWeaponEgon::Fire(const Vector &vecOrigSrc, const Vector &vecDir)
 			{
 				//m_hSprite->TurnOff();
 				m_hSprite->TurnOn();
+			}
+		}
+
+		if (m_barrelSprite)
+		{
+			if (pEntity->m_takedamage != DAMAGE_NO)
+			{
+				m_barrelSprite->TurnOn();
+			}
+			else
+			{
+				//m_hSprite->TurnOff();
+				m_barrelSprite->TurnOn();
 			}
 		}
 	}
@@ -439,9 +453,19 @@ void CWeaponEgon::UpdateEffect(const Vector &startPoint, const Vector &endPoint)
 	{
 		m_hSprite->SetAbsOrigin(endPoint);
 
-		m_hSprite->m_flFrame += 8 * gpGlobals->frametime;
+		m_hSprite->m_flFrame += 32 * gpGlobals->frametime;
 		if (m_hSprite->m_flFrame > m_hSprite->Frames())
 			m_hSprite->m_flFrame = 0;
+	}
+
+	if (m_barrelSprite)
+	{
+		m_barrelSprite->SetAbsOrigin(startPoint);
+
+		//m_barrelSprite->m_flFrame += 8 * gpGlobals->frametime;
+		m_barrelSprite->m_flFrame += 32 * gpGlobals->frametime;
+		if (m_barrelSprite->m_flFrame > m_barrelSprite->Frames())
+			m_barrelSprite->m_flFrame = 0;
 	}
 
 	if (m_hNoise)
@@ -475,6 +499,8 @@ void CWeaponEgon::CreateEffect(void)
 
 	m_hNoise = CBeam::BeamCreate(EGON_BEAM_SPRITE, 5.0);
 	m_hNoise->PointEntInit(GetAbsOrigin(), this);
+	//m_hBeam->SetBeamFlags(FBEAM_FADEIN);
+	//FBEAM_FADEIN
 	m_hNoise->SetEndAttachment(1);
 	m_hNoise->AddSpawnFlags(SF_BEAM_TEMPORARY);
 	m_hNoise->SetOwnerEntity(pPlayer);
@@ -485,9 +511,18 @@ void CWeaponEgon::CreateEffect(void)
 
 	m_hSprite = CSprite::SpriteCreate(EGON_FLARE_SPRITE, GetAbsOrigin(), false);
 	m_hSprite->SetScale(1.0);
-	m_hSprite->SetTransparency(kRenderGlow, 255, 255, 255, 255, kRenderFxNoDissipation);
+	/*m_hSprite->SetTransparency(kRenderGlow, 0, 255, 255, 255, kRenderFxNoDissipation);*/
+	m_hSprite->SetTransparency(kRenderGlow, 0, 255, 255, 255, kRenderFxDistort);
 	m_hSprite->AddSpawnFlags(SF_SPRITE_TEMPORARY);
 	m_hSprite->SetOwnerEntity(pPlayer);
+
+	m_barrelSprite = CSprite::SpriteCreate(EGON_FLARE_SPRITE, GetAbsOrigin(), false);
+	m_barrelSprite->SetScale(2);
+	//m_barrelSprite->SetEndAttachment(1);
+	//m_barrelSprite->SetTransparency(kRenderGlow, 0, 255, 255, 255, kRenderFxNoDissipation); kRenderFxDistort
+	m_barrelSprite->SetTransparency(kRenderGlow, 0, 255, 255, 255, kRenderFxDistort);
+	m_barrelSprite->AddSpawnFlags(SF_SPRITE_TEMPORARY);
+	m_barrelSprite->SetOwnerEntity(pPlayer);
 #endif    
 }
 
@@ -509,6 +544,11 @@ void CWeaponEgon::DestroyEffect(void)
 	{
 		m_hSprite->Expand(10, 500);
 		m_hSprite = NULL;
+	}
+	if (m_barrelSprite)
+	{
+		m_barrelSprite->Expand(10, 500);
+		m_barrelSprite = NULL;
 	}
 #endif
 }

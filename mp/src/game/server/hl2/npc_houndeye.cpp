@@ -35,10 +35,23 @@
 #define	HOUNDEYE_MAX_ATTACK_RADIUS		500
 #define	HOUNDEYE_MIN_ATTACK_RADIUS		100
 
+#define HOUNDEYE_MAX_SQUAD_SIZE			4
+//#define	HOUNDEYE_MAX_ATTACK_RADIUS		384
+#define	HOUNDEYE_SQUAD_BONUS			(float)1.1
+
 #define HOUNDEYE_EYE_FRAMES 4 // how many different switchable maps for the eye
 
-ConVar	sk_Houndeye_health( "sk_Houndeye_health","0");
-ConVar	sk_Houndeye_dmg_blast( "sk_Houndeye_dmg_blast","0");
+#define HOUNDEYE_SOUND_STARTLE_VOLUME	128 // how loud a sound has to be to badly scare a sleeping houndeye
+
+#define HOUNDEYE_TOP_MASS	 300.0f
+
+//#define HOUNDEYE_EYE_FRAMES 4 // how many different switchable maps for the eye
+
+//ConVar	sk_Houndeye_health( "sk_Houndeye_health","0");
+//ConVar	sk_Houndeye_dmg_blast( "sk_Houndeye_dmg_blast","0");
+
+ConVar sk_houndeye_health("sk_houndeye_health", "20");
+ConVar sk_houndeye_dmg_blast("sk_houndeye_dmg_blast", "15");
 
 //=========================================================
 // Interactions
@@ -167,7 +180,8 @@ BEGIN_DATADESC( CNPC_Houndeye )
 	DEFINE_FIELD( m_flNextSecondaryAttack,	FIELD_TIME ),
 	DEFINE_FIELD( m_bLoopClockwise,			FIELD_BOOLEAN ),
 	DEFINE_FIELD( m_pEnergyWave,				FIELD_CLASSPTR ),
-	DEFINE_FIELD( m_flEndEnergyWaveTime,		FIELD_TIME ),	
+	DEFINE_FIELD( m_flEndEnergyWaveTime,		FIELD_TIME ),
+	DEFINE_FIELD( m_iSpriteTexture,			 FIELD_INTEGER),
 
 END_DATADESC()
 
@@ -413,7 +427,7 @@ void CNPC_Houndeye::Spawn()
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
 	SetMoveType( MOVETYPE_STEP );
 	SetBloodColor( BLOOD_COLOR_YELLOW );
-	m_iHealth			= sk_Houndeye_health.GetFloat();
+	m_iHealth			= sk_houndeye_health.GetFloat();
 	m_flFieldOfView		= 0.5;// indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_NPCState			= NPC_STATE_NONE;
 	m_fAsleep			= false; // everyone spawns awake
@@ -440,6 +454,8 @@ void CNPC_Houndeye::Spawn()
 void CNPC_Houndeye::Precache()
 {
 	PrecacheModel("models/houndeye.mdl");
+
+	m_iSpriteTexture = PrecacheModel("sprites/shockwave.vmt");
 
 	PrecacheScriptSound( "NPC_Houndeye.Anger1" );
 	PrecacheScriptSound( "NPC_Houndeye.Anger2" );
@@ -676,24 +692,175 @@ void CNPC_Houndeye::Event_Killed( const CTakeDamageInfo &info )
 //=========================================================
 // SonicAttack
 //=========================================================
-void CNPC_Houndeye::SonicAttack ( void )
-{
-	EmitSound( "NPC_Houndeye.SonicAttack" );
+//void CNPC_Houndeye::SonicAttack ( void )
+//{
+//	Msg("Sonic Attack!\n");
+//	EmitSound( "NPC_Houndeye.SonicAttack" );
+//
+//	if (m_pEnergyWave)
+//	{
+//		UTIL_Remove(m_pEnergyWave);
+//	}
+//	Vector vFacingDir = EyeDirection3D( );
+//	m_pEnergyWave = (CEnergyWave*)Create( "energy_wave", EyePosition(), GetLocalAngles() );
+//	m_flEndEnergyWaveTime = gpGlobals->curtime + 1; //<<TEMP>> magic
+//	//m_pEnergyWave->SetAbsVelocity( 100*vFacingDir );
+//	//m_pEnergyWave->SetAbsVelocity(GetAbsOrigin());
+//
+//	CBaseEntity *pEntity = NULL;
+//	// iterate on all entities in the vicinity.
+//	for ( CEntitySphereQuery sphere( GetAbsOrigin(), HOUNDEYE_MAX_ATTACK_RADIUS ); pEntity = sphere.GetCurrentEntity(); sphere.NextEntity() )
+//	{
+		//if (pEntity->Classify()	== CLASS_HOUNDEYE)
+		//{
+		//	continue;
+		//}
 
-	if (m_pEnergyWave)
-	{
-		UTIL_Remove(m_pEnergyWave);
-	}
-	Vector vFacingDir = EyeDirection3D( );
-	m_pEnergyWave = (CEnergyWave*)Create( "energy_wave", EyePosition(), GetLocalAngles() );
-	m_flEndEnergyWaveTime = gpGlobals->curtime + 1; //<<TEMP>> magic
-	m_pEnergyWave->SetAbsVelocity( 100*vFacingDir );
+		//if (pEntity->GetFlags() & FL_NOTARGET)
+		//{
+		//	continue;
+		//}
+//
+//		IPhysicsObject *pPhysicsObject = pEntity->VPhysicsGetObject();
+//
+//		if ( pEntity->m_takedamage != DAMAGE_NO || pPhysicsObject)
+//		{
+//			Msg("We take damage!\n");
+//			// --------------------------
+//			// Adjust damage by distance
+//			// --------------------------
+//			float flDist = (pEntity->WorldSpaceCenter() - GetAbsOrigin()).Length();
+//			float flDamageAdjuster = 1-( flDist / HOUNDEYE_MAX_ATTACK_RADIUS );
+//
+//			// --------------------------
+//			// Adjust damage by direction
+//			// --------------------------
+//			Vector forward;
+//			AngleVectors( GetAbsAngles(), &forward );
+//			Vector vEntDir		= (pEntity->GetAbsOrigin() - GetAbsOrigin());
+//			VectorNormalize(vEntDir);
+//			float flDotPr		= DotProduct(forward,vEntDir);
+//			flDamageAdjuster   *= flDotPr;
+//
+//			if (flDamageAdjuster < 0)
+//			{
+//				continue;
+//			}
+//
+//			// --------------------------
+//			// Adjust damage by visibility
+//			// --------------------------
+//			if ( !FVisible( pEntity ) )
+//			{
+//				if ( pEntity->IsPlayer() )
+//				{
+//					// if this entity is a client, and is not in full view, inflict half damage. We do this so that players still 
+//					// take the residual damage if they don't totally leave the houndeye's effective radius. We restrict it to clients
+//					// so that monsters in other parts of the level don't take the damage and get pissed.
+//					flDamageAdjuster *= 0.5;
+//				}
+//				else if ( !FClassnameIs( pEntity, "func_breakable" ) && !FClassnameIs( pEntity, "func_pushable" ) ) 
+//				{
+//					// do not hurt nonclients through walls, but allow damage to be done to breakables
+//					continue;
+//				}
+//			}
+//
+//			// ------------------------------
+//			//  Apply the damage
+//			// ------------------------------
+//			if (pEntity->m_takedamage != DAMAGE_NO)
+//			{
+//				Msg("Apply damage!\n");
+//				CTakeDamageInfo info( this, this, flDamageAdjuster * sk_Houndeye_dmg_blast.GetFloat(), DMG_SONIC | DMG_ALWAYSGIB );
+//				CalculateExplosiveDamageForce( &info, (pEntity->GetAbsOrigin() - GetAbsOrigin()), pEntity->GetAbsOrigin() );
+//
+//				pEntity->TakeDamage( info );
+//
+//				// Throw the player
+//				if ( pEntity->IsPlayer() )
+//				{
+//					Vector forward;
+//					AngleVectors( GetLocalAngles(), &forward );
+//
+//					Vector vecVelocity = pEntity->GetAbsVelocity();
+//					vecVelocity	+= forward * 250 * flDamageAdjuster;
+//					vecVelocity.z = 300 * flDamageAdjuster;
+//					pEntity->SetAbsVelocity( vecVelocity );
+//					pEntity->ViewPunch( QAngle(random->RandomInt(-20,20), 0, random->RandomInt(-20,20)) );
+//				}
+//			}
+//			// ------------------------------
+//			//  Apply physics foces
+//			// ------------------------------
+//			IPhysicsObject *pPhysicsObject = pEntity->VPhysicsGetObject();
+//			if (pPhysicsObject)
+//			{
+//				float flForce	= flDamageAdjuster * 8000;
+//				pPhysicsObject->ApplyForceCenter( (vEntDir+Vector(0,0,0.2)) * flForce );
+//				pPhysicsObject->ApplyTorqueCenter( vEntDir * flForce );
+//			}
+//		}
+//	}
+//}
+
+//=========================================================
+// SonicAttack
+//=========================================================
+void CNPC_Houndeye::SonicAttack(void)
+{
+	float		flAdjustedDamage;
+	float		flDist;
+
+	CPASAttenuationFilter filter(this);
+	EmitSound(filter, entindex(), "HoundEye.Sonic");
+
+	CBroadcastRecipientFilter filter2;
+	te->BeamRingPoint(filter2, 0.0,
+		GetAbsOrigin(),							//origin
+		16,										//start radius
+		HOUNDEYE_MAX_ATTACK_RADIUS,//end radius
+		m_iSpriteTexture,						//texture
+		0,										//halo index
+		0,										//start frame
+		0,										//framerate
+		0.2,									//life
+		24,									//width
+		16,										//spread
+		0,										//amplitude
+		0,						//r
+		0,						//g
+		255,						//b
+		192,									//a
+		0										//speed
+		);
+
+	CBroadcastRecipientFilter filter3;
+	te->BeamRingPoint(filter3, 0.0,
+		GetAbsOrigin(),									//origin
+		16,												//start radius
+		HOUNDEYE_MAX_ATTACK_RADIUS / 2,											//end radius
+		m_iSpriteTexture,								//texture
+		0,												//halo index
+		0,												//start frame
+		0,												//framerate
+		0.2,											//life
+		24,											//width
+		16,												//spread
+		0,												//amplitude
+		0,								//r
+		0,								//g
+		255,								//b
+		192,											//a
+		0												//speed
+		);
 
 	CBaseEntity *pEntity = NULL;
 	// iterate on all entities in the vicinity.
-	for ( CEntitySphereQuery sphere( GetAbsOrigin(), HOUNDEYE_MAX_ATTACK_RADIUS ); pEntity = sphere.GetCurrentEntity(); sphere.NextEntity() )
+	while ((pEntity = gEntList.FindEntityInSphere(pEntity, GetAbsOrigin(), HOUNDEYE_MAX_ATTACK_RADIUS)) != NULL)
 	{
-		if (pEntity->Classify()	== CLASS_HOUNDEYE)
+
+		if (pEntity->Classify() == CLASS_HOUNDEYE)
 		{
 			continue;
 		}
@@ -703,82 +870,78 @@ void CNPC_Houndeye::SonicAttack ( void )
 			continue;
 		}
 
-		IPhysicsObject *pPhysicsObject = pEntity->VPhysicsGetObject();
-
-		if ( pEntity->m_takedamage != DAMAGE_NO || pPhysicsObject)
+		if (pEntity->m_takedamage != DAMAGE_NO)
 		{
-			// --------------------------
-			// Adjust damage by distance
-			// --------------------------
-			float flDist = (pEntity->WorldSpaceCenter() - GetAbsOrigin()).Length();
-			float flDamageAdjuster = 1-( flDist / HOUNDEYE_MAX_ATTACK_RADIUS );
+			if (!FClassnameIs(pEntity, "monster_houndeye"))
+			{// houndeyes don't hurt other houndeyes with their attack
 
-			// --------------------------
-			// Adjust damage by direction
-			// --------------------------
-			Vector forward;
-			AngleVectors( GetAbsAngles(), &forward );
-			Vector vEntDir		= (pEntity->GetAbsOrigin() - GetAbsOrigin());
-			VectorNormalize(vEntDir);
-			float flDotPr		= DotProduct(forward,vEntDir);
-			flDamageAdjuster   *= flDotPr;
+				// houndeyes do FULL damage if the ent in question is visible. Half damage otherwise.
+				// This means that you must get out of the houndeye's attack range entirely to avoid damage.
+				// Calculate full damage first
 
-			if (flDamageAdjuster < 0)
-			{
-				continue;
-			}
-
-			// --------------------------
-			// Adjust damage by visibility
-			// --------------------------
-			if ( !FVisible( pEntity ) )
-			{
-				if ( pEntity->IsPlayer() )
+				if (m_pSquad && m_pSquad->NumMembers() > 1)
 				{
-					// if this entity is a client, and is not in full view, inflict half damage. We do this so that players still 
-					// take the residual damage if they don't totally leave the houndeye's effective radius. We restrict it to clients
-					// so that monsters in other parts of the level don't take the damage and get pissed.
-					flDamageAdjuster *= 0.5;
+					// squad gets attack bonus.
+					flAdjustedDamage = sk_houndeye_dmg_blast.GetFloat() + sk_houndeye_dmg_blast.GetFloat() * (HOUNDEYE_SQUAD_BONUS * (m_pSquad->NumMembers() - 1));
 				}
-				else if ( !FClassnameIs( pEntity, "func_breakable" ) && !FClassnameIs( pEntity, "func_pushable" ) ) 
+				else
 				{
-					// do not hurt nonclients through walls, but allow damage to be done to breakables
-					continue;
+					// solo
+					flAdjustedDamage = sk_houndeye_dmg_blast.GetFloat();
 				}
-			}
 
-			// ------------------------------
-			//  Apply the damage
-			// ------------------------------
-			if (pEntity->m_takedamage != DAMAGE_NO)
-			{
-				CTakeDamageInfo info( this, this, flDamageAdjuster * sk_Houndeye_dmg_blast.GetFloat(), DMG_SONIC | DMG_ALWAYSGIB );
-				CalculateExplosiveDamageForce( &info, (pEntity->GetAbsOrigin() - GetAbsOrigin()), pEntity->GetAbsOrigin() );
+				flDist = (pEntity->WorldSpaceCenter() - GetAbsOrigin()).Length();
 
-				pEntity->TakeDamage( info );
+				flAdjustedDamage -= (flDist / HOUNDEYE_MAX_ATTACK_RADIUS) * flAdjustedDamage;
 
-				// Throw the player
-				if ( pEntity->IsPlayer() )
+				if (!FVisible(pEntity))
 				{
-					Vector forward;
-					AngleVectors( GetLocalAngles(), &forward );
-
-					Vector vecVelocity = pEntity->GetAbsVelocity();
-					vecVelocity	+= forward * 250 * flDamageAdjuster;
-					vecVelocity.z = 300 * flDamageAdjuster;
-					pEntity->SetAbsVelocity( vecVelocity );
-					pEntity->ViewPunch( QAngle(random->RandomInt(-20,20), 0, random->RandomInt(-20,20)) );
+					if (pEntity->IsPlayer())
+					{
+						// if this entity is a client, and is not in full view, inflict half damage. We do this so that players still 
+						// take the residual damage if they don't totally leave the houndeye's effective radius. We restrict it to clients
+						// so that monsters in other parts of the level don't take the damage and get pissed.
+						flAdjustedDamage *= 0.5;
+					}
+					else if (!FClassnameIs(pEntity, "func_breakable") && !FClassnameIs(pEntity, "func_pushable"))
+					{
+						// do not hurt nonclients through walls, but allow damage to be done to breakables
+						flAdjustedDamage = 0;
+					}
 				}
-			}
-			// ------------------------------
-			//  Apply physics foces
-			// ------------------------------
-			IPhysicsObject *pPhysicsObject = pEntity->VPhysicsGetObject();
-			if (pPhysicsObject)
-			{
-				float flForce	= flDamageAdjuster * 8000;
-				pPhysicsObject->ApplyForceCenter( (vEntDir+Vector(0,0,0.2)) * flForce );
-				pPhysicsObject->ApplyTorqueCenter( vEntDir * flForce );
+
+				//ALERT ( at_aiconsole, "Damage: %f\n", flAdjustedDamage );
+
+				if (flAdjustedDamage > 0)
+				{
+					CTakeDamageInfo info(this, this, flAdjustedDamage, DMG_SONIC | DMG_ALWAYSGIB);
+					CalculateExplosiveDamageForce(&info, (pEntity->GetAbsOrigin() - GetAbsOrigin()), pEntity->GetAbsOrigin());
+
+					pEntity->TakeDamage(info);
+
+					if ((pEntity->GetAbsOrigin() - GetAbsOrigin()).Length2D() <= HOUNDEYE_MAX_ATTACK_RADIUS)
+					{
+						if (pEntity->GetMoveType() == MOVETYPE_VPHYSICS || (pEntity->VPhysicsGetObject() && !pEntity->IsPlayer()))
+						{
+							IPhysicsObject *pPhysObject = pEntity->VPhysicsGetObject();
+
+							if (pPhysObject)
+							{
+								float flMass = pPhysObject->GetMass();
+
+								if (flMass <= HOUNDEYE_TOP_MASS)
+								{
+									// Increase the vertical lift of the force
+									Vector vecForce = info.GetDamageForce();
+									vecForce.z *= 2.0f;
+									info.SetDamageForce(vecForce);
+
+									pEntity->VPhysicsTakeDamage(info);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -802,7 +965,8 @@ void CNPC_Houndeye::StartTask( const Task_t *pTask )
 			Vector vTargetPos = GetEnemyLKP();
 			vTargetPos.z	= GetFloorZ(vTargetPos);
 
-			if (GetNavigator()->SetRadialGoal(vTargetPos, random->RandomInt(50,500), 90, 175, m_bLoopClockwise))
+			//if (GetNavigator()->SetRadialGoal(vTargetPos, random->RandomInt(50,500), 90, 175, m_bLoopClockwise))
+			if (GetNavigator()->SetRadialGoal(vTargetPos, vTargetPos, random->RandomInt(50, 500), 90, 175, m_bLoopClockwise, false))
 			{
 				TaskComplete();
 				return;

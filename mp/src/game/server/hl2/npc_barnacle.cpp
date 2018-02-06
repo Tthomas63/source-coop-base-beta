@@ -1629,7 +1629,11 @@ void CNPC_Barnacle::BitePrey( void )
 	}
 	else
 	{
-		nDamage = BARNACLE_BITE_DAMAGE_TO_PLAYER; 
+		/*nDamage = BARNACLE_BITE_DAMAGE_TO_PLAYER; */
+		// Swallow that bitch
+		iDamageType |= DMG_ALWAYSGIB;
+		nDamage = pVictim->m_iHealth;
+		//nDamage = BARNACLE_BITE_DAMAGE_TO_PLAYER;
 	}
 
 	if ( m_hRagdoll )
@@ -1710,6 +1714,10 @@ void CNPC_Barnacle::BitePrey( void )
 		}
 		return;
 	}
+	/*if (!m_hRagdoll )
+	{
+		return;
+	}*/
 
 	// Stop the ragdoll moving and start to pull the sucker up into our mouth
 	m_bSwallowingPrey = true;

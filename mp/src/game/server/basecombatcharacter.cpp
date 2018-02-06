@@ -269,6 +269,8 @@ bool CBaseCombatCharacter::HasLargeAlienGibs( void )
 	if ( myClass == CLASS_BARNACLE		 || 
 		 //myClass == CLASS_STALKER		 ||
 		 myClass == CLASS_ZOMBIE		 ||
+		 myClass == CLASS_BULLSQUID		 ||
+		 myClass == CLASS_HOUNDEYE		 ||
 		 myClass == CLASS_VORTIGAUNT )
 	{
 		 return true;
@@ -840,13 +842,25 @@ void CBaseCombatCharacter::Precache()
 
 	// Alien Gibs
 
-	PrecacheModel("models/gibs/pgiba_p3.mdl");
+	PrecacheModel("models/gibs/xenians/mgib_01.mdl");
+	PrecacheModel("models/gibs/xenians/mgib_02.mdl");
+	PrecacheModel("models/gibs/xenians/mgib_03.mdl");
+	PrecacheModel("models/gibs/xenians/mgib_04.mdl");
+	PrecacheModel("models/gibs/xenians/mgib_05.mdl");
+	PrecacheModel("models/gibs/xenians/mgib_06.mdl");
+	PrecacheModel("models/gibs/xenians/mgib_07.mdl");
+
+	PrecacheModel("models/gibs/xenians/sgib_01.mdl");
+	PrecacheModel("models/gibs/xenians/sgib_02.mdl");
+	PrecacheModel("models/gibs/xenians/sgib_03.mdl");
+
+	/*PrecacheModel("models/gibs/pgiba_p3.mdl");
 	PrecacheModel("models/gibs/rgiba_p1.mdl");
 	PrecacheModel("models/gibs/rgiba_p2.mdl");
 	PrecacheModel("models/gibs/rgiba_p3.mdl");
 	PrecacheModel("models/gibs/rgiba_p4.mdl");
 	PrecacheModel("models/gibs/rgiba_p5.mdl");
-	PrecacheModel("models/gibs/rgiba_p6.mdl");
+	PrecacheModel("models/gibs/rgiba_p6.mdl");*/
 
 	for ( int i = m_Relationship.Count() - 1; i >= 0 ; i--) 
 	{
@@ -968,25 +982,28 @@ bool CBaseCombatCharacter::CorpseGib( const CTakeDamageInfo &info )
 	{
 		int minGibForce = 50;
 		int maxGibForce = 150;
-		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/pgiba_p3.mdl", 35);
-		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/rgiba_p1.mdl", 35);
-		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/rgiba_p2.mdl", 35);
-		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/rgiba_p3.mdl", 35);
-		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/rgiba_p4.mdl", 35);
-		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/rgiba_p5.mdl", 35);
-		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/rgiba_p6.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/mgib_01.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/mgib_02.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/mgib_03.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/mgib_04.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/mgib_05.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/mgib_06.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/mgib_07.mdl", 35);
+
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/sgib_01.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/sgib_02.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/sgib_03.mdl", 35);
 		//CGib::SpawnRandomGibs( this, 4, GIB_ALIEN );	// Throw alien gibs
 		gibbed = true;
 	}
 	else if (HasSmallAlienGibs())
 	{
-		int minGibForce = 50;
-		int maxGibForce = 150;
+		int minGibForce = 25;
+		int maxGibForce = 75;
 		//CGib::SpawnRandomGibs(this, 4, GIB_ALIEN);	// Throw alien gibs
-		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/pgiba_p3.mdl", 35);
-		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/pgiba_p3.mdl", 35);
-		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/pgiba_p3.mdl", 35);
-		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/pgiba_p3.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/sgib_01.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/sgib_02.mdl", 35);
+		CGib::CustomSpawnSpecificGibs(this, 1, minGibForce, maxGibForce, "models/gibs/xenians/sgib_03.mdl", 35);
 		gibbed = true;
 	}
 
